@@ -2,6 +2,12 @@
 
 A lightweight session tracker for **WoW Ascension** (WotLK 3.3.5). Shows XP/hour, gold/hour, kills, looted gold, and estimated time-to-level while you grind.
 
+![GrindStats in action](screenshot.png)
+
+The XP/hr number tints red or green when your current pace drifts below or
+above your session average, and the line graph at the bottom shows the same
+thing over the last ~14 minutes (gold line = session average).
+
 ## Features
 
 - Session timer with pause/resume
