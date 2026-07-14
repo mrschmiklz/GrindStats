@@ -1,6 +1,8 @@
 # GrindStats
 
-A lightweight session tracker for **WoW Ascension** (WotLK 3.3.5). Shows XP/hour, gold/hour, kills, looted gold, and estimated time-to-level while you grind.
+A lightweight session tracker for **World of Warcraft: Wrath of the Lich King**
+(patch 3.3.5). Shows XP/hour, gold/hour, kills, looted gold, and estimated
+time-to-level while you grind.
 
 ![GrindStats in action](screenshot.png)
 
@@ -23,12 +25,12 @@ thing over the last ~14 minutes (gold line = session average).
 ## Installation
 
 1. Download or clone this repo.
-2. Find your `Interface\AddOns` folder:
-   - **Project Ascension (default install):**
-     `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\`
-   - **Any other WotLK 3.3.5 client:** `<your WoW folder>\Interface\AddOns\`
-     — the WoW folder is the one containing `Wow.exe`. If `AddOns` doesn't
-     exist yet, create it.
+2. Copy into your WoW `Interface\AddOns` folder — the WoW folder is the one
+   containing `Wow.exe`:
+   ```
+   <your WoW folder>\Interface\AddOns\
+   ```
+   If `AddOns` doesn't exist yet, create it.
 3. Copy the `GrindStats` folder in, so the layout is exactly:
    ```
    Interface\AddOns\GrindStats\GrindStats.toc
@@ -91,9 +93,8 @@ Right-click the tracker window to open the opacity slider.
 
 ## Compatibility
 
-- **Interface:** 30300 (WotLK 3.3.5a)
-- **Client:** Built on Project Ascension; nothing is Ascension-specific, any
-  3.3.5 client works.
+- **Game:** World of Warcraft — Wrath of the Lich King (3.3.5a)
+- **Interface:** 30300
 - **Language:** English clients only — kill and money tracking parse the
   English combat messages.
 - No libraries, no dependencies, two files.
