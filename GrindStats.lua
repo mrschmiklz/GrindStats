@@ -17,7 +17,10 @@ local session = {
     pausedTotal = 0,     -- seconds spent paused
     snapshots = {},      -- recent cumulative-XP readings (for the rate window)
     samples = {},        -- immediate-rate history, one point per SAMPLE_SECS
+    recentKillXP = {},   -- XP of the last few kills (rolling estimator)
 }
+
+local KILL_WINDOW = 10   -- kills-to-level uses the last N kills, not the session
 
 local f = CreateFrame("Frame", "GrindStatsFrame", UIParent)
 local rows = {}
@@ -156,8 +159,24 @@ local function UpdateDisplay()
         ttl = xpToLevel / xpPerHour * 3600
     end
 
-    local xpPerKill = session.kills > 0 and session.xpGained / session.kills or 0
+    -- xp/kill from the last KILL_WINDOW kills (recovers quickly after a ding
+    -- or a mob switch); falls back to the session-wide average
+    local xpPerKill = 0
+    local nRecent = #session.recentKillXP
+    if nRecent > 0 then
+        local sum = 0
+        for i = 1, nRecent do sum = sum + session.recentKillXP[i] end
+        xpPerKill = sum / nRecent
+    elseif session.kills > 0 then
+        xpPerKill = session.xpGained / session.kills
+    end
     local killsToLevel = xpPerKill > 0 and math.ceil(xpToLevel / xpPerKill) or nil
+
+    local rested = GetXPExhaustion()
+    local restedStr = ""
+    if rested and rested > 0 and UnitXPMax("player") > 0 then
+        restedStr = string.format("  |cff6699ffrested %d%%|r", rested / UnitXPMax("player") * 100)
+    end
 
     local pauseTag = session.paused and " |cffff4040(paused)|r" or ""
 
@@ -174,7 +193,7 @@ local function UpdateDisplay()
 
     rows[1]:SetText("|cff9d9d9dSession|r  " .. FormatTime(elapsed) .. pauseTag)
     rows[2]:SetText("|cff9d9d9dXP|r  " .. Comma(session.xpGained) .. "  (" .. rateColor .. Comma(xpPerHour) .. "/hr|r)")
-    rows[3]:SetText("|cff9d9d9dTo level|r  " .. (ttl and FormatTime(ttl) or "--"))
+    rows[3]:SetText("|cff9d9d9dTo level|r  " .. (ttl and FormatTime(ttl) or "--") .. restedStr)
     rows[4]:SetText("|cff9d9d9dKills|r  " .. session.kills .. (xpPerKill > 0 and ("  (" .. Comma(xpPerKill) .. " xp/kill)") or ""))
     rows[5]:SetText("|cff9d9d9dKills to lvl|r  " .. (killsToLevel and Comma(killsToLevel) or "--"))
     rows[6]:SetText("|cff9d9d9dGold net|r  " .. FormatMoney(netMoney))
@@ -198,6 +217,7 @@ local function ResetSession()
     session.pausedTotal = 0
     session.snapshots = {}
     session.samples = {}
+    session.recentKillXP = {}
     UpdateDisplay()
 end
 
@@ -449,6 +469,15 @@ f:SetScript("OnEvent", function(self, event, arg1, ...)
     elseif event == "CHAT_MSG_COMBAT_XP_GAIN" then
         if not session.paused and string.find(arg1, "dies") then
             session.kills = session.kills + 1
+            -- "Mob dies, you gain 120 experience." (rested bonus already
+            -- included in the first number)
+            local amount = tonumber(string.match(arg1, "gain (%d+) experience"))
+            if amount then
+                table.insert(session.recentKillXP, amount)
+                if #session.recentKillXP > KILL_WINDOW then
+                    table.remove(session.recentKillXP, 1)
+                end
+            end
         end
 
     elseif event == "CHAT_MSG_MONEY" then

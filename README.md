@@ -7,8 +7,8 @@ A lightweight session tracker for **WoW Ascension** (WotLK 3.3.5). Shows XP/hour
 - Session timer with pause/resume
 - XP gained and XP per hour (color-coded green/red vs session average)
 - XP-rate sparkline graph (~14 minutes of history, toggle with `/gs graph`)
-- Estimated time to next level
-- Kill count, XP per kill, and kills to level
+- Estimated time to next level, with rested XP % when applicable
+- Kill count, XP per kill (last 10 kills), and kills to level
 - Net gold change and looted gold (from mobs/chests)
 - Gold per hour
 - Draggable window — position is saved per character
