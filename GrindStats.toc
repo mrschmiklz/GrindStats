@@ -1,8 +1,8 @@
 ## Interface: 30300
 ## Title: GrindStats
-## Notes: Tracks XP/hour, gold/hour, kills, and time-to-level for your session.
+## Notes: Tracks XP/hour, gold/hour, kills, time-to-level, and an XP-rate sparkline.
 ## Author: mrschmiklz
-## Version: 1.0
+## Version: 1.1
 ## SavedVariablesPerCharacter: GrindStatsDB
 
 GrindStats.lua
