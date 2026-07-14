@@ -18,9 +18,12 @@ local session = {
     snapshots = {},      -- recent cumulative-XP readings (for the rate window)
     samples = {},        -- immediate-rate history, one point per SAMPLE_SECS
     recentKillXP = {},   -- XP of the last few kills (rolling estimator)
+    killOutliers = {},   -- consecutive kills that disagree with the window
 }
 
-local KILL_WINDOW = 10   -- kills-to-level uses the last N kills, not the session
+local KILL_WINDOW = 10        -- kills-to-level uses the last N kills, not the session
+local KILL_DEVIATION = 0.25   -- >25% off the running average = outlier
+local KILL_OUTLIERS = 3       -- this many in a row = situation changed, restart window
 
 local f = CreateFrame("Frame", "GrindStatsFrame", UIParent)
 local rows = {}
@@ -218,6 +221,7 @@ local function ResetSession()
     session.snapshots = {}
     session.samples = {}
     session.recentKillXP = {}
+    session.killOutliers = {}
     UpdateDisplay()
 end
 
@@ -464,6 +468,9 @@ f:SetScript("OnEvent", function(self, event, arg1, ...)
         UpdateDisplay()
 
     elseif event == "PLAYER_LEVEL_UP" then
+        -- kill XP drops after a ding: rebuild the estimator from fresh kills
+        session.recentKillXP = {}
+        session.killOutliers = {}
         print("|cff33ff99GrindStats|r ding! Level " .. arg1 .. " after " .. FormatTime(SessionSeconds()) .. " this session.")
 
     elseif event == "CHAT_MSG_COMBAT_XP_GAIN" then
@@ -473,9 +480,29 @@ f:SetScript("OnEvent", function(self, event, arg1, ...)
             -- included in the first number)
             local amount = tonumber(string.match(arg1, "gain (%d+) experience"))
             if amount then
-                table.insert(session.recentKillXP, amount)
-                if #session.recentKillXP > KILL_WINDOW then
-                    table.remove(session.recentKillXP, 1)
+                local window = session.recentKillXP
+                local n = #window
+                local avg
+                if n >= 3 then
+                    local sum = 0
+                    for i = 1, n do sum = sum + window[i] end
+                    avg = sum / n
+                end
+                if avg and math.abs(amount - avg) / avg > KILL_DEVIATION then
+                    -- disagrees with the window: quarantine it. A lone odd
+                    -- kill is ignored; a streak means the situation changed
+                    -- (new mobs, rested ran out), so restart from the streak.
+                    table.insert(session.killOutliers, amount)
+                    if #session.killOutliers >= KILL_OUTLIERS then
+                        session.recentKillXP = session.killOutliers
+                        session.killOutliers = {}
+                    end
+                else
+                    session.killOutliers = {}
+                    table.insert(window, amount)
+                    if #window > KILL_WINDOW then
+                        table.remove(window, 1)
+                    end
                 end
             end
         end

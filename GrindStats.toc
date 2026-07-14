@@ -2,7 +2,7 @@
 ## Title: GrindStats
 ## Notes: Tracks XP/hour, gold/hour, kills, time-to-level, rested XP, and an XP-rate sparkline.
 ## Author: mrschmiklz
-## Version: 1.2
+## Version: 1.3
 ## SavedVariablesPerCharacter: GrindStatsDB
 
 GrindStats.lua
